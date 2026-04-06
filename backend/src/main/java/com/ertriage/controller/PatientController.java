@@ -1,0 +1,170 @@
+package com.ertriage.controller;
+
+import com.ertriage.config.JwtUtil;
+import com.ertriage.dto.PatientDTO;
+import com.ertriage.dto.RecycleBinPatientDTO;
+import com.ertriage.model.User;
+import com.ertriage.repository.UserRepository;
+import com.ertriage.service.PatientService;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/patients")
+public class PatientController {
+
+    private final PatientService patientService;
+    private final UserRepository userRepository;
+    private final JwtUtil jwtUtil;
+
+    public PatientController(PatientService patientService, UserRepository userRepository, JwtUtil jwtUtil) {
+        this.patientService = patientService;
+        this.userRepository = userRepository;
+        this.jwtUtil = jwtUtil;
+    }
+
+    /**
+     * Resolves the currently authenticated user from the Authorization header.
+     * Returns null if the token is missing, invalid, or the user is not found.
+     */
+    private User resolveCurrentUser(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) return null;
+        String token = authHeader.substring(7);
+        if (!jwtUtil.isValid(token)) return null;
+        String username = jwtUtil.getUsername(token);
+        return userRepository.findByUsername(username).orElse(null);
+    }
+
+    @PostMapping
+    public ResponseEntity<PatientDTO> createPatient(@RequestBody Map<String, String> body) {
+        String rawInput = body.get("rawInput");
+        if (rawInput == null || rawInput.trim().isEmpty())
+            return ResponseEntity.badRequest().build();
+        return ResponseEntity.ok(patientService.processAndSavePatient(rawInput.trim()));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<PatientDTO>> getAllPatients(@RequestHeader("Authorization") String authHeader) {
+        User currentUser = resolveCurrentUser(authHeader);
+        return ResponseEntity.ok(patientService.getPatientsForUser(currentUser));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<PatientDTO>> searchPatients(
+            @RequestParam String q,
+            @RequestHeader("Authorization") String authHeader) {
+        User currentUser = resolveCurrentUser(authHeader);
+        return ResponseEntity.ok(patientService.searchPatientsForUser(q, currentUser));
+    }
+
+    @PutMapping("/{id}/retriage")
+    public ResponseEntity<PatientDTO> retriagePatient(@PathVariable String id, @RequestBody Map<String, String> body) {
+        try {
+            return ResponseEntity.ok(patientService.retriagePatient(id, body.get("symptoms"), body.get("vitals")));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletePatient(@PathVariable String id, @RequestBody(required = false) Map<String, String> body) {
+        try {
+            String deleteReason = body == null ? null : body.get("deleteReason");
+            if (deleteReason == null || deleteReason.trim().isEmpty()) {
+                return ResponseEntity.badRequest().build();
+            }
+            String deletedBy = body == null ? null : body.get("deletedBy");
+            patientService.deletePatient(id, deleteReason, deletedBy);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/recycle-bin")
+    public ResponseEntity<List<RecycleBinPatientDTO>> getRecycleBinPatients() {
+        return ResponseEntity.ok(patientService.getRecycleBinPatients());
+    }
+
+    @PutMapping("/recycle-bin/{id}/restore")
+    public ResponseEntity<PatientDTO> restorePatient(@PathVariable String id) {
+        try {
+            return ResponseEntity.ok(patientService.restorePatientFromRecycleBin(id));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PutMapping("/{id}/discharge")
+    public ResponseEntity<PatientDTO> dischargePatient(@PathVariable String id, @RequestBody Map<String, String> body) {
+        try {
+            String notes = body.getOrDefault("notes", "Patient discharged");
+            String performedBy = body.getOrDefault("performedBy", "Staff");
+            return ResponseEntity.ok(patientService.dischargePatient(id, notes, performedBy));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PutMapping("/{id}/handoff")
+    public ResponseEntity<PatientDTO> handoffPatient(@PathVariable String id, @RequestBody Map<String, String> body) {
+        try {
+            String toDepartment = body.getOrDefault("toDepartment", "Unknown");
+            String notes = body.getOrDefault("notes", "");
+            String performedBy = body.getOrDefault("performedBy", "Staff");
+            return ResponseEntity.ok(patientService.handoffPatient(id, toDepartment, notes, performedBy));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PutMapping("/{id}/priority")
+    public ResponseEntity<PatientDTO> updatePriority(@PathVariable String id, @RequestBody Map<String, String> body) {
+        try {
+            String priority = body.get("priority");
+            if (priority == null || priority.trim().isEmpty())
+                return ResponseEntity.badRequest().build();
+            return ResponseEntity.ok(
+                patientService.updatePriority(id, priority.trim().toUpperCase())
+            );
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/export/csv")
+    public ResponseEntity<byte[]> exportCsv(@RequestHeader("Authorization") String authHeader) {
+        User currentUser = resolveCurrentUser(authHeader);
+        List<PatientDTO> patients = patientService.getPatientsForUser(currentUser);
+        StringBuilder csv = new StringBuilder();
+        csv.append("ID,Name,Age,Priority,Symptoms,Vitals,Timestamp\n");
+        for (PatientDTO p : patients) {
+            csv.append(escapeCsv(p.getId())).append(',');
+            csv.append(escapeCsv(p.getName())).append(',');
+            csv.append(escapeCsv(p.getAge())).append(',');
+            csv.append(escapeCsv(p.getPriority())).append(',');
+            csv.append(escapeCsv(p.getSymptoms())).append(',');
+            csv.append(escapeCsv(p.getVitals())).append(',');
+            csv.append(escapeCsv(p.getTimestamp())).append('\n');
+        }
+        byte[] bytes = csv.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=patients_export.csv")
+                .contentType(MediaType.parseMediaType("text/csv"))
+                .body(bytes);
+    }
+
+    private String escapeCsv(Object value) {
+        if (value == null) return "";
+        String str = value.toString();
+        if (str.contains(",") || str.contains("\"") || str.contains("\n")) {
+            return "\"" + str.replace("\"", "\"\"") + "\"";
+        }
+        return str;
+    }
+}
