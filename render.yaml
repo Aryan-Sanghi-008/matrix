@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: er-triage-backend
+    name: matrix-backend
     runtime: docker
     plan: free
     rootDir: backend
@@ -10,10 +10,12 @@ services:
       - key: AI_PROVIDER
         value: huggingface
       - key: MONGODB_URI
-        sync: false # You will provide this in the Render Dashboard
+        sync: false
       - key: JWT_SECRET
-        generateValue: true # Render will generate a secure random key for you
+        generateValue: true
       - key: HF_API_KEY
-        sync: false # You will provide this in the Render Dashboard
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
       - key: APP_CORS_ALLOWED_ORIGIN_PATTERNS
         value: "https://*.vercel.app,http://localhost:5173"
