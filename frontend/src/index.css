@@ -3424,6 +3424,28 @@ width: 48px;
   color: #2563eb;
 }
 
+.workflow-btn.qr-code-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: linear-gradient(135deg, rgba(47, 111, 122, 0.08), rgba(99, 102, 241, 0.06));
+  border-color: rgba(47, 111, 122, 0.25);
+  color: #2f6f7a;
+}
+
+.workflow-btn.qr-code-btn:hover {
+  background: linear-gradient(135deg, rgba(47, 111, 122, 0.16), rgba(99, 102, 241, 0.12));
+  border-color: #2f6f7a;
+  color: #1a5a64;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(47, 111, 122, 0.15);
+}
+
+.workflow-btn.qr-code-btn svg {
+  flex-shrink: 0;
+}
+
 .workflow-form {
   display: flex;
   flex-direction: column;

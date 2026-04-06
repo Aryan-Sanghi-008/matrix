@@ -7,6 +7,7 @@ import heartRateIcon from '../assets/heart-rate.png';
 import retriageIcon from '../assets/arrow-counterclockwise-12-filled_.png';
 import collapseIcon from '../assets/arrow-bottom_.png';
 import React, { useState, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 
 const SLA_MS = { RED: 5 * 60 * 1000, YELLOW: 15 * 60 * 1000, GREEN: 45 * 60 * 1000 };
 
@@ -172,14 +173,6 @@ function PatientCard({ patient, onArchive, onDismiss, onRetriage, onDragStart, o
                         className="card-retriage"
                         onClick={(e) => {
                             e.stopPropagation();
-                            setShowQr(true);
-                        }}
-                        title="Generate QR Code"
-                    >📱</button>
-                    <button
-                        className="card-retriage"
-                        onClick={(e) => {
-                            e.stopPropagation();
                             onToggleCollapse(patient.id);
                         }}
                         title={collapsed ? 'Expand card' : 'Collapse card'}
@@ -313,6 +306,10 @@ function PatientCard({ patient, onArchive, onDismiss, onRetriage, onDragStart, o
                     <div className="card-workflow-actions">
                         {!actionType ? (
                             <div className="workflow-btn-row">
+                                <button className="workflow-btn qr-code-btn" onClick={() => setShowQr(true)}>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><line x1="21" y1="14" x2="21" y2="17"/><line x1="17" y1="21" x2="21" y2="21"/></svg>
+                                    QR Code
+                                </button>
                                 <button className="workflow-btn discharge-btn" onClick={() => setActionType('discharge')}>
                                     🏠 Discharge
                                 </button>
@@ -386,7 +383,10 @@ function PatientCard({ patient, onArchive, onDismiss, onRetriage, onDragStart, o
             )}
 
             {showDetail && <PatientDetailModal patient={patient} onClose={() => setShowDetail(false)} />}
-            {showQr && <PatientQrModal patient={patient} onClose={() => setShowQr(false)} />}
+            {showQr && ReactDOM.createPortal(
+                <PatientQrModal patient={patient} onClose={() => setShowQr(false)} />,
+                document.body
+            )}
         </div>
     );
 }
