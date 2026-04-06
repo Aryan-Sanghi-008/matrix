@@ -37,9 +37,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     String username = claims.getSubject();
                     String role = claims.get("role", String.class);
 
+                    System.out.println("JWT AUTH SUCCESS: user=" + username + ", role=" + role);
+
                     UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
                             username, null, List.of(new SimpleGrantedAuthority("ROLE_" + role)));
                     SecurityContextHolder.getContext().setAuthentication(auth);
+                } else {
+                    System.out.println("JWT AUTH FAILED: Token invalid or expired");
                 }
             } catch (Exception e) {
                 // Invalid token - continue without auth

@@ -16,19 +16,7 @@ public class QrController {
         this.qrService = qrService;
     }
 
-    /**
-     * Generate/refresh a QR access token for a patient.
-     * Requires authentication (any staff member).
-     */
-    @PostMapping("/api/patients/{id}/qr-token")
-    public ResponseEntity<Map<String, String>> generateQrToken(@PathVariable String id) {
-        try {
-            String token = qrService.generateOrRefreshToken(id);
-            return ResponseEntity.ok(Map.of("token", token));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
+    // Removed generateQrToken — moved to PatientController for path consistency and security logic.
 
     /**
      * Public endpoint — retrieve patient history by QR token.

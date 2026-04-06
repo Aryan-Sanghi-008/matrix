@@ -21,11 +21,13 @@ public class PatientController {
     private final PatientService patientService;
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
+    private final com.ertriage.service.QrService qrService;
 
-    public PatientController(PatientService patientService, UserRepository userRepository, JwtUtil jwtUtil) {
+    public PatientController(PatientService patientService, UserRepository userRepository, JwtUtil jwtUtil, com.ertriage.service.QrService qrService) {
         this.patientService = patientService;
         this.userRepository = userRepository;
         this.jwtUtil = jwtUtil;
+        this.qrService = qrService;
     }
 
     /**
@@ -157,6 +159,16 @@ public class PatientController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=patients_export.csv")
                 .contentType(MediaType.parseMediaType("text/csv"))
                 .body(bytes);
+    }
+
+    @PostMapping("/{id}/qr-token")
+    public ResponseEntity<Map<String, String>> generateQrToken(@PathVariable String id) {
+        try {
+            String token = qrService.generateOrRefreshToken(id);
+            return ResponseEntity.ok(Map.of("token", token));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     private String escapeCsv(Object value) {

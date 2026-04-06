@@ -35,11 +35,14 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/health").permitAll()
                 .requestMatchers("/ws/**").permitAll()
                 .requestMatchers("/api/qr/**").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
+                // QR token generation — STAFF only
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/patients/*/qr-token").hasAnyRole("ADMIN", "DOCTOR", "NURSE", "SUPERVISOR", "RECEPTIONIST")
                 // Recycle Bin — ADMIN, DOCTOR, SUPERVISOR
                 .requestMatchers("/api/patients/recycle-bin/**").hasAnyRole("ADMIN", "DOCTOR", "SUPERVISOR")
                 // User management write operations — ADMIN only
