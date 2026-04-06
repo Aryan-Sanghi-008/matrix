@@ -1,10 +1,10 @@
-import { getAuthHeaders } from './authApi.js';
-import { API_BASE } from './config.js';
+import { getAuthHeaders } from "./authApi.js";
+import { API_BASE } from "./config.js";
 
 export async function submitPatient(rawInput) {
   const response = await fetch(`${API_BASE}/patients`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getAuthHeaders() },
     body: JSON.stringify({ rawInput }),
   });
   if (!response.ok) throw new Error(`Server error: ${response.status}`);
@@ -13,8 +13,8 @@ export async function submitPatient(rawInput) {
 
 export async function refineSpeech(rawInput) {
   const response = await fetch(`${API_BASE}/refine-speech`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getAuthHeaders() },
     body: JSON.stringify({ rawInput }),
   });
   if (!response.ok) throw new Error(`Server error: ${response.status}`);
@@ -23,32 +23,37 @@ export async function refineSpeech(rawInput) {
 }
 
 export async function fetchPatients() {
-  const response = await fetch(`${API_BASE}/patients`, { headers: { ...getAuthHeaders() } });
-  if (!response.ok) throw new Error(`Server error: ${response.status}`);
-  return response.json();
-}
-
-export async function searchPatients(query) {
-  const response = await fetch(`${API_BASE}/patients/search?q=${encodeURIComponent(query)}`, {
+  const response = await fetch(`${API_BASE}/patients`, {
     headers: { ...getAuthHeaders() },
   });
   if (!response.ok) throw new Error(`Server error: ${response.status}`);
   return response.json();
 }
 
+export async function searchPatients(query) {
+  const response = await fetch(
+    `${API_BASE}/patients/search?q=${encodeURIComponent(query)}`,
+    {
+      headers: { ...getAuthHeaders() },
+    },
+  );
+  if (!response.ok) throw new Error(`Server error: ${response.status}`);
+  return response.json();
+}
+
 export async function dismissPatient(id, deleteReason, deletedBy) {
   if (!deleteReason || !deleteReason.trim()) {
-    throw new Error('Delete reason is required.');
+    throw new Error("Delete reason is required.");
   }
 
   const response = await fetch(`${API_BASE}/patients/${id}`, {
-    method: 'DELETE',
-    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    method: "DELETE",
+    headers: { "Content-Type": "application/json", ...getAuthHeaders() },
     body: JSON.stringify({ deleteReason, deletedBy }),
   });
   if (!response.ok) {
     if (response.status === 400) {
-      throw new Error('Delete reason is required.');
+      throw new Error("Delete reason is required.");
     }
     throw new Error(`Server error: ${response.status}`);
   }
@@ -63,18 +68,21 @@ export async function fetchRecycleBinPatients() {
 }
 
 export async function restorePatientFromRecycleBin(id) {
-  const response = await fetch(`${API_BASE}/patients/recycle-bin/${id}/restore`, {
-    method: 'PUT',
-    headers: { ...getAuthHeaders() },
-  });
+  const response = await fetch(
+    `${API_BASE}/patients/recycle-bin/${id}/restore`,
+    {
+      method: "PUT",
+      headers: { ...getAuthHeaders() },
+    },
+  );
   if (!response.ok) throw new Error(`Server error: ${response.status}`);
   return response.json();
 }
 
 export async function retriagePatient(id, symptoms, vitals) {
   const response = await fetch(`${API_BASE}/patients/${id}/retriage`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getAuthHeaders() },
     body: JSON.stringify({ symptoms, vitals }),
   });
   if (!response.ok) throw new Error(`Server error: ${response.status}`);
@@ -83,8 +91,8 @@ export async function retriagePatient(id, symptoms, vitals) {
 
 export async function dischargePatient(id, notes, performedBy) {
   const response = await fetch(`${API_BASE}/patients/${id}/discharge`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getAuthHeaders() },
     body: JSON.stringify({ notes, performedBy }),
   });
   if (!response.ok) throw new Error(`Server error: ${response.status}`);
@@ -93,8 +101,8 @@ export async function dischargePatient(id, notes, performedBy) {
 
 export async function handoffPatient(id, toDepartment, notes, performedBy) {
   const response = await fetch(`${API_BASE}/patients/${id}/handoff`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getAuthHeaders() },
     body: JSON.stringify({ toDepartment, notes, performedBy }),
   });
   if (!response.ok) throw new Error(`Server error: ${response.status}`);
@@ -104,8 +112,8 @@ export async function handoffPatient(id, toDepartment, notes, performedBy) {
 // ── NEW: update a patient's triage priority (used by drag-and-drop) ──────────
 export async function updatePatientPriority(id, priority) {
   const response = await fetch(`${API_BASE}/patients/${id}/priority`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getAuthHeaders() },
     body: JSON.stringify({ priority }),
   });
   if (!response.ok) throw new Error(`Server error: ${response.status}`);
@@ -116,8 +124,8 @@ export async function updatePatientPriority(id, priority) {
 // ── QR Code API ──────────────────────────────────────────────────────────────
 export async function generateQrToken(patientId) {
   const response = await fetch(`${API_BASE}/patients/${patientId}/qr-token`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getAuthHeaders() },
   });
   if (!response.ok) throw new Error(`Server error: ${response.status}`);
   return response.json();
@@ -127,7 +135,7 @@ export async function fetchPatientByQrToken(token) {
   const response = await fetch(`${API_BASE}/qr/${token}`);
   if (response.status === 410) {
     const data = await response.json();
-    throw new Error(data.error || 'QR code has expired');
+    throw new Error(data.error || "QR code has expired");
   }
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
@@ -136,5 +144,3 @@ export async function fetchPatientByQrToken(token) {
   return response.json();
 }
 // ────────────────────────────────────────────────────────────────────────────
-
-

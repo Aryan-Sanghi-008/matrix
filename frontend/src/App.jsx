@@ -1,306 +1,370 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
-import Header from './components/Header.jsx';
-import Footer from './components/Footer.jsx';
-import VoiceCapture from './components/VoiceCapture.jsx';
-import KanbanBoard from './components/KanbanBoard.jsx';
-import TaskManager from './components/TaskManager.jsx';
-import AssignedTasksTab from './components/AssignedTasksTab.jsx';
-import UserManagement from './components/UserManagement.jsx';
-import StaffManagementDirectory from './components/StaffManagementDirectory.jsx';
-import Analytics from './components/Analytics.jsx';
-import RecycleBin from './components/RecycleBin.jsx';
-import ResourceAllocation from './components/ResourceAllocation.jsx';
-import Login from './components/Login.jsx';
-import PatientQrHistory from './components/PatientQrHistory.jsx';
-import { fetchRecycleBinPatients } from './api/patientApi.js';
-import { getStoredToken, getStoredUser, clearAuth } from './api/authApi.js';
+import React, { useState, useCallback, useRef, useEffect } from "react";
+import Header from "./components/Header.jsx";
+import Footer from "./components/Footer.jsx";
+import VoiceCapture from "./components/VoiceCapture.jsx";
+import KanbanBoard from "./components/KanbanBoard.jsx";
+import TaskManager from "./components/TaskManager.jsx";
+import AssignedTasksTab from "./components/AssignedTasksTab.jsx";
+import UserManagement from "./components/UserManagement.jsx";
+import StaffManagementDirectory from "./components/StaffManagementDirectory.jsx";
+import Analytics from "./components/Analytics.jsx";
+import RecycleBin from "./components/RecycleBin.jsx";
+import ResourceAllocation from "./components/ResourceAllocation.jsx";
+import Login from "./components/Login.jsx";
+import PatientQrHistory from "./components/PatientQrHistory.jsx";
+import { fetchRecycleBinPatients } from "./api/patientApi.js";
+import { getStoredToken, getStoredUser, clearAuth } from "./api/authApi.js";
 
-const RECYCLE_BIN_ACCESS_ROLES = ['ADMIN', 'DOCTOR', 'SUPERVISOR'];
-const ASSIGNED_TASK_ACCESS_ROLES = ['ADMIN', 'DOCTOR', 'NURSE'];
-const RESOURCE_ALLOCATION_ACCESS_ROLES = ['ADMIN', 'SUPERVISOR', 'RECEPTIONIST'];
-const STAFF_DIRECTORY_ACCESS_ROLES = ['ADMIN', 'SUPERVISOR'];
-const STAFF_MANAGEMENT_ACCESS_ROLES = ['ADMIN', 'SUPERVISOR'];
-const TASK_MANAGER_ACCESS_ROLES = ['ADMIN', 'SUPERVISOR'];
-const VOICE_CAPTURE_ACCESS_ROLES = ['ADMIN', 'DOCTOR', 'NURSE', 'RECEPTIONIST'];
-const ANALYTICS_ACCESS_ROLES = ['ADMIN', 'SUPERVISOR', 'DOCTOR', 'NURSE', 'RECEPTIONIST'];
-const DRAG_DROP_ACCESS_ROLES = ['ADMIN', 'SUPERVISOR', 'DOCTOR',];
-const RETRIAGE_ACCESS_ROLES = ['ADMIN', 'DOCTOR'];
+const RECYCLE_BIN_ACCESS_ROLES = ["ADMIN", "DOCTOR", "SUPERVISOR"];
+const ASSIGNED_TASK_ACCESS_ROLES = ["ADMIN", "DOCTOR", "NURSE"];
+const RESOURCE_ALLOCATION_ACCESS_ROLES = [
+  "ADMIN",
+  "SUPERVISOR",
+  "RECEPTIONIST",
+];
+const STAFF_DIRECTORY_ACCESS_ROLES = ["ADMIN", "SUPERVISOR"];
+const STAFF_MANAGEMENT_ACCESS_ROLES = ["ADMIN", "SUPERVISOR"];
+const TASK_MANAGER_ACCESS_ROLES = ["ADMIN", "SUPERVISOR"];
+const VOICE_CAPTURE_ACCESS_ROLES = ["ADMIN", "DOCTOR", "NURSE", "RECEPTIONIST"];
+const ANALYTICS_ACCESS_ROLES = [
+  "ADMIN",
+  "SUPERVISOR",
+  "DOCTOR",
+  "NURSE",
+  "RECEPTIONIST",
+];
+const DRAG_DROP_ACCESS_ROLES = ["ADMIN", "SUPERVISOR", "DOCTOR"];
+const RETRIAGE_ACCESS_ROLES = ["ADMIN", "DOCTOR"];
 
 function canAccessRecycleBin(user) {
-    return RECYCLE_BIN_ACCESS_ROLES.includes(user?.role);
+  return RECYCLE_BIN_ACCESS_ROLES.includes(user?.role);
 }
 
 function canAccessAssignedTasks(user) {
-    return ASSIGNED_TASK_ACCESS_ROLES.includes(user?.role);
+  return ASSIGNED_TASK_ACCESS_ROLES.includes(user?.role);
 }
 
 function canAccessResourceAllocation(user) {
-    return RESOURCE_ALLOCATION_ACCESS_ROLES.includes(user?.role);
+  return RESOURCE_ALLOCATION_ACCESS_ROLES.includes(user?.role);
 }
 
 function canAccessStaffDirectory(user) {
-    return STAFF_DIRECTORY_ACCESS_ROLES.includes(user?.role);
+  return STAFF_DIRECTORY_ACCESS_ROLES.includes(user?.role);
 }
 
 function canAccessStaffManagement(user) {
-    return STAFF_MANAGEMENT_ACCESS_ROLES.includes(user?.role);
+  return STAFF_MANAGEMENT_ACCESS_ROLES.includes(user?.role);
 }
 
 function canAccessTaskManager(user) {
-    return TASK_MANAGER_ACCESS_ROLES.includes(user?.role);
+  return TASK_MANAGER_ACCESS_ROLES.includes(user?.role);
 }
 
 function canAccessVoiceCapture(user) {
-    return VOICE_CAPTURE_ACCESS_ROLES.includes(user?.role);
+  return VOICE_CAPTURE_ACCESS_ROLES.includes(user?.role);
 }
 
 function canAccessAnalytics(user) {
-    return ANALYTICS_ACCESS_ROLES.includes(user?.role);
+  return ANALYTICS_ACCESS_ROLES.includes(user?.role);
 }
 
 function canDragDrop(user) {
-    return DRAG_DROP_ACCESS_ROLES.includes(user?.role);
+  return DRAG_DROP_ACCESS_ROLES.includes(user?.role);
 }
 
 function canRetriage(user) {
-    return RETRIAGE_ACCESS_ROLES.includes(user?.role);
+  return RETRIAGE_ACCESS_ROLES.includes(user?.role);
 }
 
 export default function App() {
-    // QR route: if URL hash is #/qr/{token}, show public patient history
-    const [isQrRoute, setIsQrRoute] = useState(() => /^#\/qr\/.+/.test(window.location.hash));
+  // QR route: if URL hash is #/qr/{token}, show public patient history
+  const [isQrRoute, setIsQrRoute] = useState(() =>
+    /^#\/qr\/.+/.test(window.location.hash),
+  );
 
-    useEffect(() => {
-        const handleHashChange = () => {
-            setIsQrRoute(/^#\/qr\/.+/.test(window.location.hash));
-        };
-        window.addEventListener('hashchange', handleHashChange);
-        return () => window.removeEventListener('hashchange', handleHashChange);
-    }, []);
-
-    const [user, setUser] = useState(getStoredUser);
-    const [isAuthenticated, setIsAuthenticated] = useState(!!getStoredToken());
-    const [patients, setPatients] = useState([]);
-    const [newPatient, setNewPatient] = useState(null);
-    const [activeTab, setActiveTab] = useState('triage');
-    const [targetPatientId, setTargetPatientId] = useState(null);
-    const [recycleBinCount, setRecycleBinCount] = useState(0);
-    const shellRef = useRef(null);
-    const frameRef = useRef(null);
-    const recycleBinAllowed = canAccessRecycleBin(user);
-    const assignedTasksAllowed = canAccessAssignedTasks(user);
-    const resourceAllowed = canAccessResourceAllocation(user);
-    const staffDirectoryAllowed = canAccessStaffDirectory(user);
-    const staffMgmtAllowed = canAccessStaffManagement(user);
-    const taskManagerAllowed = canAccessTaskManager(user);
-    const voiceCaptureAllowed = canAccessVoiceCapture(user);
-    const analyticsAllowed = canAccessAnalytics(user);
-    const dragDropAllowed = canDragDrop(user);
-    const retriageAllowed = canRetriage(user);
-
-    const handleLogin = (userData) => {
-        setUser(userData);
-        setIsAuthenticated(true);
+  useEffect(() => {
+    const handleHashChange = () => {
+      setIsQrRoute(/^#\/qr\/.+/.test(window.location.hash));
     };
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
 
-    const handleSignOut = () => {
-        clearAuth();
-        setUser(null);
-        setIsAuthenticated(false);
-        setRecycleBinCount(0);
-        setActiveTab('triage');
-    };
+  const [user, setUser] = useState(getStoredUser);
+  const [isAuthenticated, setIsAuthenticated] = useState(!!getStoredToken());
+  const [patients, setPatients] = useState([]);
+  const [newPatient, setNewPatient] = useState(null);
+  const [activeTab, setActiveTab] = useState("triage");
+  const [targetPatientId, setTargetPatientId] = useState(null);
+  const [recycleBinCount, setRecycleBinCount] = useState(0);
+  const shellRef = useRef(null);
+  const frameRef = useRef(null);
+  const recycleBinAllowed = canAccessRecycleBin(user);
+  const assignedTasksAllowed = canAccessAssignedTasks(user);
+  const resourceAllowed = canAccessResourceAllocation(user);
+  const staffDirectoryAllowed = canAccessStaffDirectory(user);
+  const staffMgmtAllowed = canAccessStaffManagement(user);
+  const taskManagerAllowed = canAccessTaskManager(user);
+  const voiceCaptureAllowed = canAccessVoiceCapture(user);
+  const analyticsAllowed = canAccessAnalytics(user);
+  const dragDropAllowed = canDragDrop(user);
+  const retriageAllowed = canRetriage(user);
 
-    const handlePatientAdded = (patient) => {
-        setNewPatient(patient);
-        setTimeout(() => setNewPatient(null), 100);
-    };
+  const handleLogin = (userData) => {
+    setUser(userData);
+    setIsAuthenticated(true);
+  };
 
-    const handlePatientRestored = useCallback((patient) => {
-        if (!patient?.id) return;
-        setNewPatient(patient);
-        setTargetPatientId(patient.id);
-        setActiveTab('triage');
-        setTimeout(() => setNewPatient(null), 100);
-    }, []);
+  const handleSignOut = () => {
+    clearAuth();
+    setUser(null);
+    setIsAuthenticated(false);
+    setRecycleBinCount(0);
+    setActiveTab("triage");
+  };
 
-    const refreshRecycleBinCount = useCallback(async () => {
-        if (!recycleBinAllowed || !getStoredToken()) {
-            setRecycleBinCount(0);
-            return;
-        }
+  const handlePatientAdded = (patient) => {
+    setNewPatient(patient);
+    setTimeout(() => setNewPatient(null), 100);
+  };
 
-        try {
-            const archivedPatients = await fetchRecycleBinPatients();
-            setRecycleBinCount(Array.isArray(archivedPatients) ? archivedPatients.length : 0);
-        } catch {
-            setRecycleBinCount(0);
-        }
-    }, [recycleBinAllowed]);
+  const handlePatientRestored = useCallback((patient) => {
+    if (!patient?.id) return;
+    setNewPatient(patient);
+    setTargetPatientId(patient.id);
+    setActiveTab("triage");
+    setTimeout(() => setNewPatient(null), 100);
+  }, []);
 
-    const handlePatientArchived = useCallback(() => {
-        setRecycleBinCount(prev => prev + 1);
-    }, []);
-
-    const handleRecycleBinCountChange = useCallback((count) => {
-        setRecycleBinCount(Math.max(0, count));
-    }, []);
-
-    const handlePatientsChange = useCallback((updatedList) => {
-        setPatients(updatedList);
-    }, []);
-
-    useEffect(() => {
-        return () => { if (frameRef.current) cancelAnimationFrame(frameRef.current); };
-    }, []);
-
-    useEffect(() => {
-        if (!recycleBinAllowed) {
-            setRecycleBinCount(0);
-            if (activeTab === 'recycle') {
-                setActiveTab('triage');
-            }
-        }
-        if (!assignedTasksAllowed && activeTab === 'assignedTasks') {
-            setActiveTab('triage');
-        }
-        if (!resourceAllowed && activeTab === 'resource') {
-            setActiveTab('triage');
-        }
-        if (!staffDirectoryAllowed && activeTab === 'users') {
-            setActiveTab('triage');
-        }
-        if (!staffMgmtAllowed && activeTab === 'staffMgmt') {
-            setActiveTab('triage');
-        }
-        if (!analyticsAllowed && activeTab === 'analytics') {
-            setActiveTab('triage');
-        }
-
-        if (recycleBinAllowed) {
-            refreshRecycleBinCount();
-            const interval = setInterval(refreshRecycleBinCount, 30000);
-            return () => clearInterval(interval);
-        }
-    }, [activeTab, recycleBinAllowed, assignedTasksAllowed, resourceAllowed, staffDirectoryAllowed, staffMgmtAllowed, analyticsAllowed, refreshRecycleBinCount]);
-
-    const handlePatientSearchSelect = (patientId) => {
-        setTargetPatientId(patientId);
-        setActiveTab('triage');
-    };
-
-    const handleTargetPatientScrolled = () => {
-        setTargetPatientId(null);
-    };
-
-    const handlePointerMove = useCallback((event) => {
-        if (!shellRef.current) return;
-        const rect = shellRef.current.getBoundingClientRect();
-        const x = ((event.clientX - rect.left) / rect.width) * 100;
-        const y = ((event.clientY - rect.top) / rect.height) * 100;
-        if (frameRef.current) cancelAnimationFrame(frameRef.current);
-        frameRef.current = requestAnimationFrame(() => {
-            if (!shellRef.current) return;
-            shellRef.current.style.setProperty('--pointer-x', `${Math.max(0, Math.min(100, x))}%`);
-            shellRef.current.style.setProperty('--pointer-y', `${Math.max(0, Math.min(100, y))}%`);
-        });
-    }, []);
-
-    // Public QR scan route — bypass auth entirely
-    if (isQrRoute) {
-        return <PatientQrHistory />;
+  const refreshRecycleBinCount = useCallback(async () => {
+    if (!recycleBinAllowed || !getStoredToken()) {
+      setRecycleBinCount(0);
+      return;
     }
 
-    if (!isAuthenticated) {
-        return <Login onLogin={handleLogin} />;
+    try {
+      const archivedPatients = await fetchRecycleBinPatients();
+      setRecycleBinCount(
+        Array.isArray(archivedPatients) ? archivedPatients.length : 0,
+      );
+    } catch {
+      setRecycleBinCount(0);
+    }
+  }, [recycleBinAllowed]);
+
+  const handlePatientArchived = useCallback(() => {
+    setRecycleBinCount((prev) => prev + 1);
+  }, []);
+
+  const handleRecycleBinCountChange = useCallback((count) => {
+    setRecycleBinCount(Math.max(0, count));
+  }, []);
+
+  const handlePatientsChange = useCallback((updatedList) => {
+    setPatients(updatedList);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (frameRef.current) cancelAnimationFrame(frameRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!recycleBinAllowed) {
+      setRecycleBinCount(0);
+      if (activeTab === "recycle") {
+        setActiveTab("triage");
+      }
+    }
+    if (!assignedTasksAllowed && activeTab === "assignedTasks") {
+      setActiveTab("triage");
+    }
+    if (!resourceAllowed && activeTab === "resource") {
+      setActiveTab("triage");
+    }
+    if (!staffDirectoryAllowed && activeTab === "users") {
+      setActiveTab("triage");
+    }
+    if (!staffMgmtAllowed && activeTab === "staffMgmt") {
+      setActiveTab("triage");
+    }
+    if (!analyticsAllowed && activeTab === "analytics") {
+      setActiveTab("triage");
     }
 
-    return (
-        <div className="app-shell" ref={shellRef} onMouseMove={handlePointerMove}>
-            <div className="ambient-particles" aria-hidden="true">
-                <span className="particle p1"></span>
-                <span className="particle p2"></span>
-                <span className="particle p3"></span>
-                <span className="particle p4"></span>
-                <span className="particle p5"></span>
-            </div>
-            <Header 
-                patients={patients} 
-                user={user} 
-                onSignOut={handleSignOut} 
-                onPatientSearchSelect={handlePatientSearchSelect}
-            />
-            <main className={`main-layout ${activeTab === 'triage' ? 'triage-layout' : ''}`}>
-                <div className="tab-navigation">
-                    <button className={`tab-btn ${activeTab === 'triage' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('triage')}>🩺 Patient Triage</button>
-                    {resourceAllowed && (
-                        <button className={`tab-btn ${activeTab === 'resource' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('resource')}>🏥 Resource Allocation</button>
-                    )}
-                    {staffDirectoryAllowed && (
-                        <button className={`tab-btn ${activeTab === 'users' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('users')}>👥 Staff Directory</button>
-                    )}
-                    {staffMgmtAllowed && (
-                        <button className={`tab-btn ${activeTab === 'staffMgmt' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('staffMgmt')}>🧾 Staff Management Directory</button>
-                    )}
-                    {assignedTasksAllowed && (
-                        <button className={`tab-btn ${activeTab === 'assignedTasks' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('assignedTasks')}>✅ My Worklist</button>
-                    )}
-                    {analyticsAllowed && (
-                        <button className={`tab-btn ${activeTab === 'analytics' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('analytics')}>📊 Analytics</button>
-                    )}
-                        {recycleBinAllowed && (
-                        <button className={`tab-btn ${activeTab === 'recycle' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('recycle')}>
-                            <span>♻️ </span>
-                            <span className="tab-badge">{recycleBinCount}</span>
-                        </button>
-                    )}
-                </div>
-                {activeTab === 'triage' ? (
-                    <>
-                        {voiceCaptureAllowed && <VoiceCapture onPatientAdded={handlePatientAdded} />}
-                        <div className="content-wrapper">
-                            <div className="left-section">
-                                <KanbanBoard 
-                                    newPatient={newPatient} 
-                                    onPatientsChange={handlePatientsChange}
-                                    highlightPatientId={targetPatientId}
-                                    onHighlighted={handleTargetPatientScrolled}
-                                    currentUser={user}
-                                    onPatientArchived={handlePatientArchived}
-                                    canDragDrop={dragDropAllowed}
-                                    canRetriage={retriageAllowed}
-                                    canArchive={recycleBinAllowed}
-                                />
-                            </div>
-                            {taskManagerAllowed && (
-                                <div className="right-section">
-                                    <TaskManager currentUser={user} />
-                                </div>
-                            )}
-                        </div>
-                    </>
-                ) : activeTab === 'users' ? (
-                    <UserManagement currentUser={user} />
-                ) : activeTab === 'recycle' ? (
-                    <RecycleBin onPatientRestored={handlePatientRestored} onCountChange={handleRecycleBinCountChange} />
-                ) : activeTab === 'resource' ? (
-                    <ResourceAllocation />
-                ) : activeTab === 'staffMgmt' ? (
-                    <StaffManagementDirectory />
-                ) : activeTab === 'assignedTasks' ? (
-                    <AssignedTasksTab user={user} />
-                ) : activeTab === 'analytics' ? (
-                    <Analytics currentUser={user} />
-                ) : null}
-            </main>
-            <Footer onTabChange={setActiveTab} />
+    if (recycleBinAllowed) {
+      refreshRecycleBinCount();
+      const interval = setInterval(refreshRecycleBinCount, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [
+    activeTab,
+    recycleBinAllowed,
+    assignedTasksAllowed,
+    resourceAllowed,
+    staffDirectoryAllowed,
+    staffMgmtAllowed,
+    analyticsAllowed,
+    refreshRecycleBinCount,
+  ]);
+
+  const handlePatientSearchSelect = (patientId) => {
+    setTargetPatientId(patientId);
+    setActiveTab("triage");
+  };
+
+  const handleTargetPatientScrolled = () => {
+    setTargetPatientId(null);
+  };
+
+  const handlePointerMove = useCallback((event) => {
+    if (!shellRef.current) return;
+    const rect = shellRef.current.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * 100;
+    const y = ((event.clientY - rect.top) / rect.height) * 100;
+    if (frameRef.current) cancelAnimationFrame(frameRef.current);
+    frameRef.current = requestAnimationFrame(() => {
+      if (!shellRef.current) return;
+      shellRef.current.style.setProperty(
+        "--pointer-x",
+        `${Math.max(0, Math.min(100, x))}%`,
+      );
+      shellRef.current.style.setProperty(
+        "--pointer-y",
+        `${Math.max(0, Math.min(100, y))}%`,
+      );
+    });
+  }, []);
+
+  // Public QR scan route — bypass auth entirely
+  if (isQrRoute) {
+    return <PatientQrHistory />;
+  }
+
+  if (!isAuthenticated) {
+    return <Login onLogin={handleLogin} />;
+  }
+
+  return (
+    <div className="app-shell" ref={shellRef} onMouseMove={handlePointerMove}>
+      <div className="ambient-particles" aria-hidden="true">
+        <span className="particle p1"></span>
+        <span className="particle p2"></span>
+        <span className="particle p3"></span>
+        <span className="particle p4"></span>
+        <span className="particle p5"></span>
+      </div>
+      <Header
+        patients={patients}
+        user={user}
+        onSignOut={handleSignOut}
+        onPatientSearchSelect={handlePatientSearchSelect}
+      />
+      <main
+        className={`main-layout ${activeTab === "triage" ? "triage-layout" : ""}`}
+      >
+        <div className="tab-navigation">
+          <button
+            className={`tab-btn ${activeTab === "triage" ? "active" : ""}`}
+            onClick={() => setActiveTab("triage")}
+          >
+            🩺 Patient Triage
+          </button>
+          {resourceAllowed && (
+            <button
+              className={`tab-btn ${activeTab === "resource" ? "active" : ""}`}
+              onClick={() => setActiveTab("resource")}
+            >
+              🏥 Resource Allocation
+            </button>
+          )}
+          {staffDirectoryAllowed && (
+            <button
+              className={`tab-btn ${activeTab === "users" ? "active" : ""}`}
+              onClick={() => setActiveTab("users")}
+            >
+              👥 Staff Directory
+            </button>
+          )}
+          {staffMgmtAllowed && (
+            <button
+              className={`tab-btn ${activeTab === "staffMgmt" ? "active" : ""}`}
+              onClick={() => setActiveTab("staffMgmt")}
+            >
+              🧾 Staff Management Directory
+            </button>
+          )}
+          {assignedTasksAllowed && (
+            <button
+              className={`tab-btn ${activeTab === "assignedTasks" ? "active" : ""}`}
+              onClick={() => setActiveTab("assignedTasks")}
+            >
+              ✅ My Worklist
+            </button>
+          )}
+          {analyticsAllowed && (
+            <button
+              className={`tab-btn ${activeTab === "analytics" ? "active" : ""}`}
+              onClick={() => setActiveTab("analytics")}
+            >
+              📊 Analytics
+            </button>
+          )}
+          {recycleBinAllowed && (
+            <button
+              className={`tab-btn ${activeTab === "recycle" ? "active" : ""}`}
+              onClick={() => setActiveTab("recycle")}
+            >
+              <span>♻️ </span>
+              <span className="tab-badge">{recycleBinCount}</span>
+            </button>
+          )}
         </div>
-    );
+        {activeTab === "triage" ? (
+          <>
+            {voiceCaptureAllowed && (
+              <VoiceCapture onPatientAdded={handlePatientAdded} />
+            )}
+            <div className="content-wrapper">
+              <div className="left-section">
+                <KanbanBoard
+                  newPatient={newPatient}
+                  onPatientsChange={handlePatientsChange}
+                  highlightPatientId={targetPatientId}
+                  onHighlighted={handleTargetPatientScrolled}
+                  currentUser={user}
+                  onPatientArchived={handlePatientArchived}
+                  canDragDrop={dragDropAllowed}
+                  canRetriage={retriageAllowed}
+                  canArchive={recycleBinAllowed}
+                />
+              </div>
+              {taskManagerAllowed && (
+                <div className="right-section">
+                  <TaskManager currentUser={user} />
+                </div>
+              )}
+            </div>
+          </>
+        ) : activeTab === "users" ? (
+          <UserManagement currentUser={user} />
+        ) : activeTab === "recycle" ? (
+          <RecycleBin
+            onPatientRestored={handlePatientRestored}
+            onCountChange={handleRecycleBinCountChange}
+          />
+        ) : activeTab === "resource" ? (
+          <ResourceAllocation />
+        ) : activeTab === "staffMgmt" ? (
+          <StaffManagementDirectory />
+        ) : activeTab === "assignedTasks" ? (
+          <AssignedTasksTab user={user} />
+        ) : activeTab === "analytics" ? (
+          <Analytics currentUser={user} />
+        ) : null}
+      </main>
+      <Footer onTabChange={setActiveTab} />
+    </div>
+  );
 }

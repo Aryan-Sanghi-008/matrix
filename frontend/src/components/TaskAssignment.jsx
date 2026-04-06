@@ -1,20 +1,16 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef } from "react";
 
 export default function TaskAssignment({ onAddTask, tasks }) {
   const [showPanel, setShowPanel] = useState(false);
-  const [taskInput, setTaskInput] = useState('');
-  const [assignTo, setAssignTo] = useState('');
-  const [priority, setPriority] = useState('normal');
+  const [taskInput, setTaskInput] = useState("");
+  const [assignTo, setAssignTo] = useState("");
+  const [priority, setPriority] = useState("normal");
   const audioRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
 
-  const doctors = [
-    'Dr. Sarah Johnson',
-    'Dr. Rajesh Patel',
-    'Dr. Emily Davis'
-  ];
+  const doctors = ["Dr. Sarah Johnson", "Dr. Rajesh Patel", "Dr. Emily Davis"];
 
   const handleAddTask = (e) => {
     e.preventDefault();
@@ -23,11 +19,11 @@ export default function TaskAssignment({ onAddTask, tasks }) {
         title: taskInput,
         assignedTo: assignTo,
         priority,
-        timestamp: new Date().toLocaleTimeString()
+        timestamp: new Date().toLocaleTimeString(),
       });
-      setTaskInput('');
-      setAssignTo('');
-      setPriority('normal');
+      setTaskInput("");
+      setAssignTo("");
+      setPriority("normal");
     }
   };
 
@@ -55,10 +51,10 @@ export default function TaskAssignment({ onAddTask, tasks }) {
   };
 
   const formatTime = (time) => {
-    if (!time) return '0:00';
+    if (!time) return "0:00";
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
 
   const handleSliderChange = (e) => {
@@ -69,12 +65,12 @@ export default function TaskAssignment({ onAddTask, tasks }) {
     }
   };
 
-  const pendingTasks = tasks.filter(t => !t.completed).length;
-  const completedTasks = tasks.filter(t => t.completed).length;
+  const pendingTasks = tasks.filter((t) => !t.completed).length;
+  const completedTasks = tasks.filter((t) => t.completed).length;
 
   return (
     <>
-      <button 
+      <button
         className="task-assignment-toggle"
         onClick={() => setShowPanel(!showPanel)}
       >
@@ -86,10 +82,9 @@ export default function TaskAssignment({ onAddTask, tasks }) {
         <div className="task-assignment-panel">
           <div className="task-assignment-header">
             <h3>Task Assignment</h3>
-            <button 
-              className="close-btn"
-              onClick={() => setShowPanel(false)}
-            >×</button>
+            <button className="close-btn" onClick={() => setShowPanel(false)}>
+              ×
+            </button>
           </div>
 
           <div className="task-assignment-content">
@@ -118,8 +113,8 @@ export default function TaskAssignment({ onAddTask, tasks }) {
                 </div>
                 <div className="form-group">
                   <label>Priority</label>
-                  <select 
-                    value={priority} 
+                  <select
+                    value={priority}
                     onChange={(e) => setPriority(e.target.value)}
                     className="priority-select"
                   >
@@ -132,14 +127,16 @@ export default function TaskAssignment({ onAddTask, tasks }) {
 
               <div className="form-group">
                 <label>Assign To</label>
-                <select 
-                  value={assignTo} 
+                <select
+                  value={assignTo}
                   onChange={(e) => setAssignTo(e.target.value)}
                   className="assign-select"
                 >
                   <option value="">Select Doctor</option>
-                  {doctors.map(doc => (
-                    <option key={doc} value={doc}>{doc}</option>
+                  {doctors.map((doc) => (
+                    <option key={doc} value={doc}>
+                      {doc}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -150,18 +147,15 @@ export default function TaskAssignment({ onAddTask, tasks }) {
             </form>
 
             <div className="audio-player">
-              <button 
-                className="play-btn"
-                onClick={handlePlayPause}
-              >
-                {isPlaying ? '⏸' : '▶'}
+              <button className="play-btn" onClick={handlePlayPause}>
+                {isPlaying ? "⏸" : "▶"}
               </button>
 
               <div className="audio-controls">
                 <span className="time">{formatTime(currentTime)}</span>
-                <input 
-                  type="range" 
-                  min="0" 
+                <input
+                  type="range"
+                  min="0"
                   max={duration || 0}
                   value={currentTime}
                   onChange={handleSliderChange}
@@ -172,7 +166,7 @@ export default function TaskAssignment({ onAddTask, tasks }) {
 
               <button className="speaker-btn">🔊</button>
 
-              <audio 
+              <audio
                 ref={audioRef}
                 onTimeUpdate={handleTimeUpdate}
                 onLoadedMetadata={handleLoadedMetadata}
@@ -182,11 +176,16 @@ export default function TaskAssignment({ onAddTask, tasks }) {
 
             <div className="task-list">
               {tasks.length === 0 ? (
-                <p className="empty-state">No tasks yet. Add your first task above.</p>
+                <p className="empty-state">
+                  No tasks yet. Add your first task above.
+                </p>
               ) : (
-                tasks.slice(0, 5).map(task => (
-                  <div key={task.id} className={`task-item-panel ${task.completed ? 'completed' : ''}`}>
-                    <input 
+                tasks.slice(0, 5).map((task) => (
+                  <div
+                    key={task.id}
+                    className={`task-item-panel ${task.completed ? "completed" : ""}`}
+                  >
+                    <input
                       type="checkbox"
                       checked={task.completed}
                       onChange={() => {}}

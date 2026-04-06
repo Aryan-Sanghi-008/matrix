@@ -1,5 +1,5 @@
-import { getAuthHeaders } from './authApi.js';
-import { API_BASE } from './config.js';
+import { getAuthHeaders } from "./authApi.js";
+import { API_BASE } from "./config.js";
 
 async function parseResponse(response) {
   if (response.ok) {
@@ -27,8 +27,8 @@ export async function fetchResourceZones() {
 
 export async function createResourceZone(payload) {
   const response = await fetch(`${API_BASE}/resource-allocation/zones`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getAuthHeaders() },
     body: JSON.stringify(payload),
   });
   return parseResponse(response);
@@ -36,8 +36,8 @@ export async function createResourceZone(payload) {
 
 export async function createResourceRoom(payload) {
   const response = await fetch(`${API_BASE}/resource-allocation/rooms`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getAuthHeaders() },
     body: JSON.stringify(payload),
   });
   return parseResponse(response);

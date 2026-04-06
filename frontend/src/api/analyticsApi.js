@@ -1,5 +1,5 @@
-import { getAuthHeaders } from './authApi.js';
-import { API_BASE } from './config.js';
+import { getAuthHeaders } from "./authApi.js";
+import { API_BASE } from "./config.js";
 
 function computeFallbackAnalytics(patients) {
   const list = Array.isArray(patients) ? patients : [];
@@ -13,7 +13,9 @@ function computeFallbackAnalytics(patients) {
   }, {});
 
   const ages = list.map((p) => p?.age).filter((age) => Number.isFinite(age));
-  const averageAge = ages.length ? Math.round(ages.reduce((a, b) => a + b, 0) / ages.length) : 0;
+  const averageAge = ages.length
+    ? Math.round(ages.reduce((a, b) => a + b, 0) / ages.length)
+    : 0;
 
   const patientsToday = list.filter((p) => {
     if (!p?.timestamp) return false;
@@ -56,9 +58,9 @@ export async function exportPatientsCsv() {
   if (!response.ok) throw new Error(`Server error: ${response.status}`);
   const blob = await response.blob();
   const url = window.URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
-  a.download = 'patients_export.csv';
+  a.download = "patients_export.csv";
   document.body.appendChild(a);
   a.click();
   a.remove();
