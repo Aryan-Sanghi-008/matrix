@@ -51,6 +51,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
+    @SuppressWarnings("null")
     public ResponseEntity<?> register(@RequestBody Map<String, String> body) {
         String username = body.get("username");
         String password = body.get("password");

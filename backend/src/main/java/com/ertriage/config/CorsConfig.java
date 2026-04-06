@@ -9,7 +9,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
 
 @Configuration
 public class CorsConfig {
@@ -18,7 +17,7 @@ public class CorsConfig {
     private String allowedOriginPatterns;
 
     @Bean
-    public CorsFilter corsFilter() {
+    public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
 
@@ -28,7 +27,13 @@ public class CorsConfig {
                 .collect(Collectors.toList());
 
         if (patterns.isEmpty()) {
-            config.setAllowedOriginPatterns(List.of("http://localhost:*", "http://127.0.0.1:*", "https://console.cron-job.org"));
+            config.setAllowedOriginPatterns(List.of(
+                "http://localhost:*", 
+                "http://127.0.0.1:*", 
+                "http://10.0.*.*:*", 
+                "http://192.168.*.*:*",
+                "https://*.vercel.app"
+            ));
         } else {
             config.setAllowedOriginPatterns(patterns);
         }
@@ -38,8 +43,7 @@ public class CorsConfig {
         config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config); // ✅ apply to all routes
-
-        return new CorsFilter(source);
+        source.registerCorsConfiguration("/**", config);
+        return source;
     }
 }

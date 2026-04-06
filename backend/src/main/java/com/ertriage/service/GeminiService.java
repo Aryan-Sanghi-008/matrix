@@ -2,8 +2,6 @@ package com.ertriage.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -14,8 +12,6 @@ import java.util.List;
 import java.util.Map;
 
 public class GeminiService implements AiExtractionService {
-
-    private static final Logger logger = LoggerFactory.getLogger(GeminiService.class);
 
     private final LocalExtractorService localExtractorService;
     private final String apiKey;
@@ -80,7 +76,7 @@ public class GeminiService implements AiExtractionService {
 
             return refinedText.trim();
 
-        } catch (Exception e) {
+        } catch (java.io.IOException | InterruptedException e) {
             System.err.println("Error during speech refinement: " + e.getMessage());
             return rawInput;
         }
@@ -348,7 +344,7 @@ Do NOT include:
             result.put("recommended_specialization", patientData.path("recommended_specialization").asText("Emergency Medicine"));
             return result;
 
-        } catch (Exception e) {
+        } catch (java.io.IOException | InterruptedException e) {
             System.err.println("Error calling Gemini API: " + e.getMessage());
             return localExtractorService.extract(rawInput);
         }

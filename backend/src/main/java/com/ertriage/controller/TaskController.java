@@ -87,6 +87,7 @@ public class TaskController {
     }
 
     @PutMapping("/{id}/complete")
+    @SuppressWarnings("null")
     public ResponseEntity<Task> completeTask(@PathVariable String id) {
         return taskRepository.findById(id).map(task -> {
             task.setCompleted(true);
@@ -95,6 +96,7 @@ public class TaskController {
     }
 
     @DeleteMapping("/{id}")
+    @SuppressWarnings("null")
     public ResponseEntity<Void> deleteTask(@PathVariable String id) {
         if (!taskRepository.existsById(id)) {
             return ResponseEntity.notFound().build();

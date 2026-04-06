@@ -32,6 +32,7 @@ public class QrService {
      * Generates a new QR token for the given patient, or refreshes an existing one.
      * Returns the token string.
      */
+    @SuppressWarnings("null")
     public String generateOrRefreshToken(String patientId) {
         // Verify patient exists
         patientRepository.findById(patientId)
@@ -63,6 +64,7 @@ public class QrService {
             throw new IllegalStateException("This QR code has expired. Please request a new one.");
         }
 
+        @SuppressWarnings("null")
         Patient patient = patientRepository.findById(accessToken.getPatientId())
                 .orElseThrow(() -> new IllegalArgumentException("Patient record no longer exists."));
 

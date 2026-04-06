@@ -307,8 +307,8 @@ function PatientCard({ patient, onArchive, onDismiss, onRetriage, onDragStart, o
                         {!actionType ? (
                             <div className="workflow-btn-row">
                                 <button className="workflow-btn qr-code-btn" onClick={() => setShowQr(true)}>
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><line x1="21" y1="14" x2="21" y2="17"/><line x1="17" y1="21" x2="21" y2="21"/></svg>
-                                    QR Code
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><line x1="21" y1="14" x2="21" y2="17"/><line x1="17" y1="21" x2="21" y2="21"/></svg>
+                                    View Patient QR
                                 </button>
                                 <button className="workflow-btn discharge-btn" onClick={() => setActionType('discharge')}>
                                     🏠 Discharge

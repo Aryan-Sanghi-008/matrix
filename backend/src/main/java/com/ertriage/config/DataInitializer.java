@@ -21,9 +21,10 @@ public class DataInitializer {
     }
 
     @Bean
+    @SuppressWarnings("null")
     public CommandLineRunner initializeDefaultUsers() {
         return args -> {
-                        ensureSuperAdmin();
+            ensureSuperAdmin();
 
             if (userRepository.count() == 0) {
                 String defaultPassword = passwordEncoder.encode("password123");
@@ -58,23 +59,24 @@ public class DataInitializer {
         };
     }
 
-        private void ensureSuperAdmin() {
-                if (userRepository.existsByUsername("superadmin")) {
-                        return;
-                }
-
-                User superAdmin = User.builder()
-                                .username("superadmin")
-                                .fullName("Super Administrator")
-                                .email("superadmin@ertriage.com")
-                                .password(passwordEncoder.encode("password123"))
-                                .role(User.Role.ADMIN)
-                                .department("Administration")
-                                .active(true)
-                                .createdAt(java.time.LocalDateTime.now())
-                                .build();
-
-                userRepository.save(superAdmin);
-                System.out.println("Initialized default superadmin user");
+    @SuppressWarnings("null")
+    private void ensureSuperAdmin() {
+        if (userRepository.existsByUsername("superadmin")) {
+            return;
         }
+
+        User superAdmin = User.builder()
+                .username("superadmin")
+                .fullName("Super Administrator")
+                .email("superadmin@ertriage.com")
+                .password(passwordEncoder.encode("password123"))
+                .role(User.Role.ADMIN)
+                .department("Administration")
+                .active(true)
+                .createdAt(java.time.LocalDateTime.now())
+                .build();
+
+        userRepository.save(superAdmin);
+        System.out.println("Initialized default superadmin user");
+    }
 }

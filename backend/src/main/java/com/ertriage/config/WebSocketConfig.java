@@ -26,6 +26,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     }
 
     @Override
+    @SuppressWarnings("null")
     public void registerStompEndpoints(@NonNull StompEndpointRegistry registry) {
         List<String> patterns = Arrays.stream(allowedOriginPatterns.split(","))
                 .map(String::trim)

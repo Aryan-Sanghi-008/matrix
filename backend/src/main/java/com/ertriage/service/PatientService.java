@@ -10,7 +10,6 @@ import com.ertriage.model.User;
 import com.ertriage.repository.DeletedPatientRepository;
 import com.ertriage.repository.PatientEventRepository;
 import com.ertriage.repository.PatientRepository;
-import com.ertriage.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -30,13 +29,12 @@ public class PatientService {
     private final LocalExtractorService localExtractorService;
     private final ResourceAllocationService resourceAllocationService;
     private final PatientEventRepository eventRepository;
-    private final UserRepository userRepository;
     private final DeletedPatientRepository deletedPatientRepository;
 
     public PatientService(PatientRepository patientRepository, AiExtractionService aiExtractionService,
             TriageRulesEngine triageRulesEngine, LocalExtractorService localExtractorService,
             ResourceAllocationService resourceAllocationService,
-            PatientEventRepository eventRepository, UserRepository userRepository,
+            PatientEventRepository eventRepository,
             DeletedPatientRepository deletedPatientRepository) {
         this.patientRepository = patientRepository;
         this.aiExtractionService = aiExtractionService;
@@ -44,7 +42,6 @@ public class PatientService {
         this.localExtractorService = localExtractorService;
         this.resourceAllocationService = resourceAllocationService;
         this.eventRepository = eventRepository;
-        this.userRepository = userRepository;
         this.deletedPatientRepository = deletedPatientRepository;
     }
 
@@ -69,10 +66,10 @@ public class PatientService {
 
         Integer age = null;
         Object ageObj = extractedData.get("age");
-        if (ageObj instanceof Integer)
-            age = (Integer) ageObj;
-        else if (ageObj instanceof Number)
-            age = ((Number) ageObj).intValue();
+        if (ageObj instanceof Integer ageVal)
+            age = ageVal;
+        else if (ageObj instanceof Number numVal)
+            age = numVal.intValue();
 
         String recommendedSpec = (String) extractedData.getOrDefault("recommended_specialization", "Emergency Medicine");
 
@@ -83,6 +80,7 @@ public class PatientService {
 
         resourceAllocationService.assignResources(patient, recommendedSpec);
 
+        @SuppressWarnings("null")
         Patient saved = patientRepository.save(patient);
 
         logEvent(saved.getId(), PatientEvent.EventType.INTAKE,
@@ -114,22 +112,12 @@ public class PatientService {
     public List<PatientDTO> getPatientsForUser(User user) {
         if (user == null) return getAllPatients();
         User.Role role = user.getRole();
-        List<Patient> patients;
-        switch (role) {
-            case ADMIN:
-            case SUPERVISOR:
-            case RECEPTIONIST:
-                patients = patientRepository.findAllByOrderByPriorityAscTimestampAsc();
-                break;
-            case DOCTOR:
-                patients = patientRepository.findPatientsForDoctor(user.getUsername(), user.getFullName());
-                break;
-            case NURSE:
-                patients = patientRepository.findPatientsForNurse(user.getUsername(), user.getFullName());
-                break;
-            default:
-                patients = List.of();
-        }
+        List<Patient> patients = switch (role) {
+            case ADMIN, SUPERVISOR, RECEPTIONIST -> patientRepository.findAllByOrderByPriorityAscTimestampAsc();
+            case DOCTOR -> patientRepository.findPatientsForDoctor(user.getUsername(), user.getFullName());
+            case NURSE -> patientRepository.findPatientsForNurse(user.getUsername(), user.getFullName());
+            default -> List.of();
+        };
         return enrichWithTimeline(patients);
     }
 
@@ -156,24 +144,18 @@ public class PatientService {
      */
     public List<Patient> filterPatientsByRole(List<Patient> patients, User user) {
         if (user == null) return patients;
-        switch (user.getRole()) {
-            case ADMIN:
-            case SUPERVISOR:
-            case RECEPTIONIST:
-                return patients;
-            case DOCTOR:
-                return patients.stream()
+        return switch (user.getRole()) {
+            case ADMIN, SUPERVISOR, RECEPTIONIST -> patients;
+            case DOCTOR -> patients.stream()
                         .filter(p -> user.getUsername().equals(p.getAssignedDoctorUsername())
                                 || user.getFullName().equals(p.getAssignedDoctorName()))
                         .collect(Collectors.toList());
-            case NURSE:
-                return patients.stream()
+            case NURSE -> patients.stream()
                         .filter(p -> user.getUsername().equals(p.getAssignedNurseUsername())
                                 || user.getFullName().equals(p.getAssignedNurseName()))
                         .collect(Collectors.toList());
-            default:
-                return List.of();
-        }
+            default -> List.of();
+        };
     }
 
     private List<PatientDTO> enrichWithTimeline(List<Patient> patients) {
@@ -192,7 +174,8 @@ public class PatientService {
         }).collect(Collectors.toList());
     }
 
-        public void deletePatient(String id, String deleteReason, String deletedBy) {
+    @SuppressWarnings("null")
+    public void deletePatient(String id, String deleteReason, String deletedBy) {
         Patient patient = patientRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Patient not found with id: " + id));
 
@@ -207,14 +190,15 @@ public class PatientService {
                 .atZone(ZoneId.systemDefault())
                 .toInstant());
 
-        deletedPatientRepository.save(DeletedPatient.from(
+        DeletedPatient archived = DeletedPatient.from(
             patient,
             events,
             deletedAt,
             normalizedReason,
             normalizedDeletedBy,
-            purgeAt));
-
+            purgeAt);
+            
+        deletedPatientRepository.save(archived);
         eventRepository.deleteByPatientId(id);
         patientRepository.deleteById(id);
     }
@@ -226,6 +210,7 @@ public class PatientService {
                 .collect(Collectors.toList());
     }
 
+    @SuppressWarnings("null")
     public PatientDTO restorePatientFromRecycleBin(String id) {
         DeletedPatient deletedPatient = deletedPatientRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Archived patient not found with id: " + id));
@@ -251,6 +236,7 @@ public class PatientService {
     }
 
     public PatientDTO dischargePatient(String id, String notes, String performedBy) {
+        @SuppressWarnings("null")
         Patient patient = patientRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Patient not found with id: " + id));
 
@@ -261,6 +247,7 @@ public class PatientService {
     }
 
     public PatientDTO handoffPatient(String id, String toDepartment, String notes, String performedBy) {
+        @SuppressWarnings("null")
         Patient patient = patientRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Patient not found with id: " + id));
 
@@ -276,6 +263,7 @@ public class PatientService {
     }
 
     public PatientDTO retriagePatient(String id, String updatedSymptoms, String updatedVitals) {
+        @SuppressWarnings("null")
         Patient patient = patientRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Patient not found with id: " + id));
 
@@ -339,6 +327,7 @@ public class PatientService {
 
 
     public PatientDTO updatePriority(String id, String newPriorityStr) {
+        @SuppressWarnings("null")
         Patient patient = patientRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Patient not found with id: " + id));
 

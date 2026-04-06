@@ -3064,22 +3064,23 @@ width: 48px;
    ======================================== */
 
 .patient-card {
-  border-radius: 8px;
-  padding: 16px;
-  border: 1px solid #d0dce6;
-  border-left: 5px solid #1e5a7a;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid rgba(208, 220, 230, 0.6);
+  border-left: 6px solid #1e5a7a;
   position: relative;
   cursor: default;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   animation: slideIn 0.4s ease;
-  background: white;
+  background: #ffffff;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   overflow: hidden;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
   flex-shrink: 0;
   width: 100%;
+  min-width: 0; /* Important for responsiveness */
 }
 
 .patient-card>* {
@@ -3437,18 +3438,23 @@ width: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  background: linear-gradient(135deg, rgba(47, 111, 122, 0.08), rgba(99, 102, 241, 0.06));
-  border-color: rgba(47, 111, 122, 0.25);
-  color: #2f6f7a;
+  gap: 8px;
+  background: linear-gradient(135deg, #2f6f7a 0%, #1a5a64 100%);
+  border: none;
+  color: white;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(47, 111, 122, 0.25);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .workflow-btn.qr-code-btn:hover {
-  background: linear-gradient(135deg, rgba(47, 111, 122, 0.16), rgba(99, 102, 241, 0.12));
-  border-color: #2f6f7a;
-  color: #1a5a64;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(47, 111, 122, 0.15);
+  background: linear-gradient(135deg, #1a5a64 0%, #0f4048 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(47, 111, 122, 0.35);
+}
+
+.workflow-btn.qr-code-btn:active {
+  transform: translateY(0);
 }
 
 .workflow-btn.qr-code-btn svg {
@@ -8092,14 +8098,13 @@ width: 48px;
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  animation: qrFadeIn 0.25s ease-out;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  animation: qrFadeIn 0.3s ease-out;
 }
 
 @keyframes qrFadeIn {
@@ -8277,27 +8282,47 @@ width: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 12px 10px;
-  border-radius: 14px;
-  border: 1px solid rgba(47, 111, 122, 0.12);
-  background: rgba(47, 111, 122, 0.04);
-  color: #1e293b;
-  font-size: 13px;
+  gap: 8px;
+  padding: 14px 12px;
+  border-radius: 16px;
+  border: none;
+  font-size: 14px;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   font-family: inherit;
 }
 
-.qr-action-btn:hover {
-  background: rgba(47, 111, 122, 0.1);
-  border-color: rgba(47, 111, 122, 0.2);
-  transform: translateY(-1px);
+.qr-download {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
 }
 
-.qr-download:hover { background: rgba(34, 197, 94, 0.1); border-color: rgba(34, 197, 94, 0.2); }
-.qr-print:hover { background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.2); }
+.qr-print {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+.qr-copy {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.qr-action-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+}
+
+.qr-action-btn:active {
+  transform: translateY(0);
+}
+
+.qr-download:hover { box-shadow: 0 6px 20px rgba(34, 197, 94, 0.3); }
+.qr-print:hover { box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3); }
+.qr-copy:hover { background: #e2e8f0; }
 .qr-copy:hover { background: rgba(168, 85, 247, 0.1); border-color: rgba(168, 85, 247, 0.2); }
 
 

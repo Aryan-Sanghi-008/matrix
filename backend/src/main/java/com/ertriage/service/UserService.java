@@ -26,6 +26,7 @@ public class UserService {
         return userRepository.findByActiveTrue();
     }
 
+    @SuppressWarnings("null")
     public Optional<User> getUserById(String id) {
         return userRepository.findById(id);
     }
@@ -42,6 +43,7 @@ public class UserService {
         return userRepository.findByDepartment(department);
     }
 
+    @SuppressWarnings("null")
     public User createUser(User user) {
         if (userRepository.existsByUsername(user.getUsername()))
             throw new IllegalArgumentException("Username already exists: " + user.getUsername());
@@ -61,6 +63,7 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    @SuppressWarnings("null")
     public User updateUser(String id, User updatedUser) {
         User existing = userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + id));
@@ -73,6 +76,7 @@ public class UserService {
         return userRepository.save(existing);
     }
 
+    @SuppressWarnings("null")
     public void deactivateUser(String id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + id));
@@ -80,6 +84,7 @@ public class UserService {
         userRepository.save(user);
     }
 
+    @SuppressWarnings("null")
     public void deleteUser(String id) {
         if (!userRepository.existsById(id))
             throw new IllegalArgumentException("User not found: " + id);

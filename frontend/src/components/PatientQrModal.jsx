@@ -7,6 +7,7 @@ export default function PatientQrModal({ patient, onClose }) {
     const [qrUrl, setQrUrl] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [copied, setCopied] = useState(false);
     const canvasRef = useRef(null);
 
     useEffect(() => {
@@ -83,6 +84,8 @@ export default function PatientQrModal({ patient, onClose }) {
         if (!qrUrl) return;
         try {
             await navigator.clipboard.writeText(qrUrl);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
         } catch { /* fallback ignored */ }
     };
 
@@ -148,8 +151,8 @@ export default function PatientQrModal({ patient, onClose }) {
                         <button className="qr-action-btn qr-print" onClick={handlePrint}>
                             <span>🖨️</span> Print
                         </button>
-                        <button className="qr-action-btn qr-copy" onClick={handleCopy}>
-                            <span>📋</span> Copy Link
+                        <button className={`qr-action-btn qr-copy ${copied ? 'copied' : ''}`} onClick={handleCopy}>
+                            <span>{copied ? '✅' : '📋'}</span> {copied ? 'Copied!' : 'Copy Link'}
                         </button>
                     </div>
                 )}
