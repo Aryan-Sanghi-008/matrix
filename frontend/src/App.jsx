@@ -11,6 +11,7 @@ import Analytics from './components/Analytics.jsx';
 import RecycleBin from './components/RecycleBin.jsx';
 import ResourceAllocation from './components/ResourceAllocation.jsx';
 import Login from './components/Login.jsx';
+import PatientQrHistory from './components/PatientQrHistory.jsx';
 import { fetchRecycleBinPatients } from './api/patientApi.js';
 import { getStoredToken, getStoredUser, clearAuth } from './api/authApi.js';
 
@@ -66,6 +67,17 @@ function canRetriage(user) {
 }
 
 export default function App() {
+    // QR route: if URL hash is #/qr/{token}, show public patient history
+    const [isQrRoute, setIsQrRoute] = useState(() => /^#\/qr\/.+/.test(window.location.hash));
+
+    useEffect(() => {
+        const handleHashChange = () => {
+            setIsQrRoute(/^#\/qr\/.+/.test(window.location.hash));
+        };
+        window.addEventListener('hashchange', handleHashChange);
+        return () => window.removeEventListener('hashchange', handleHashChange);
+    }, []);
+
     const [user, setUser] = useState(getStoredUser);
     const [isAuthenticated, setIsAuthenticated] = useState(!!getStoredToken());
     const [patients, setPatients] = useState([]);
@@ -193,6 +205,11 @@ export default function App() {
             shellRef.current.style.setProperty('--pointer-y', `${Math.max(0, Math.min(100, y))}%`);
         });
     }, []);
+
+    // Public QR scan route — bypass auth entirely
+    if (isQrRoute) {
+        return <PatientQrHistory />;
+    }
 
     if (!isAuthenticated) {
         return <Login onLogin={handleLogin} />;

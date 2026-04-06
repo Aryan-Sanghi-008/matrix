@@ -113,3 +113,28 @@ export async function updatePatientPriority(id, priority) {
 }
 // ────────────────────────────────────────────────────────────────────────────
 
+// ── QR Code API ──────────────────────────────────────────────────────────────
+export async function generateQrToken(patientId) {
+  const response = await fetch(`${API_BASE}/patients/${patientId}/qr-token`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+  });
+  if (!response.ok) throw new Error(`Server error: ${response.status}`);
+  return response.json();
+}
+
+export async function fetchPatientByQrToken(token) {
+  const response = await fetch(`${API_BASE}/qr/${token}`);
+  if (response.status === 410) {
+    const data = await response.json();
+    throw new Error(data.error || 'QR code has expired');
+  }
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.error || `Server error: ${response.status}`);
+  }
+  return response.json();
+}
+// ────────────────────────────────────────────────────────────────────────────
+
+

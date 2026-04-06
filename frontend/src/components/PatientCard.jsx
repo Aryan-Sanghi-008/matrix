@@ -1,6 +1,7 @@
 import { dismissPatient, handoffPatient } from '../api/patientApi.js';
 import PatientTimeline from './PatientTimeline.jsx';
 import PatientDetailModal from './PatientDetailModal.jsx';
+import PatientQrModal from './PatientQrModal.jsx';
 
 import heartRateIcon from '../assets/heart-rate.png';
 import retriageIcon from '../assets/arrow-counterclockwise-12-filled_.png';
@@ -71,6 +72,7 @@ function PatientCard({ patient, onArchive, onDismiss, onRetriage, onDragStart, o
     const [actionNotes, setActionNotes] = useState('');
     const [actionDept, setActionDept] = useState('ICU');
     const [showDetail, setShowDetail] = useState(false);
+    const [showQr, setShowQr] = useState(false);
     const [discharging, setDischarging] = useState(false);
     const [actionError, setActionError] = useState('');
 
@@ -166,6 +168,14 @@ function PatientCard({ patient, onArchive, onDismiss, onRetriage, onDragStart, o
                     )}
                 </div>
                 <div className="card-header-actions">
+                    <button
+                        className="card-retriage"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setShowQr(true);
+                        }}
+                        title="Generate QR Code"
+                    >📱</button>
                     <button
                         className="card-retriage"
                         onClick={(e) => {
@@ -376,6 +386,7 @@ function PatientCard({ patient, onArchive, onDismiss, onRetriage, onDragStart, o
             )}
 
             {showDetail && <PatientDetailModal patient={patient} onClose={() => setShowDetail(false)} />}
+            {showQr && <PatientQrModal patient={patient} onClose={() => setShowQr(false)} />}
         </div>
     );
 }
