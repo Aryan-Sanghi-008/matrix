@@ -18,4 +18,4 @@ services:
       - key: GEMINI_API_KEY
         sync: false
       - key: APP_CORS_ALLOWED_ORIGIN_PATTERNS
-        value: "https://*.vercel.app,http://localhost:5173"
+        value: "https://*.vercel.app,http://localhost:*,http://127.0.0.1:*"
